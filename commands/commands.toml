@@ -1,1 +1,1 @@
-m = "file.exe"
+m = ["python", "file.py"]
