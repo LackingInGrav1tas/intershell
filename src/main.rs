@@ -1,14 +1,24 @@
 mod parser;
+mod cmd;
 
-use parser::{input, parse, get_commands, open_file};
+use std::env;
+
+use parser::{input, parse, get_commands};
+use cmd::run_command;
 
 fn main() {
-    println!("{}", parse(
+
+    let dir = env::current_dir().expect("").into_os_string().into_string().expect("");
+
+    println!("{}> {}", dir, parse(
         input( &String::from("enter some code... ") )
     ).print());
 
     let cmd = get_commands()["m"].clone();
-    let file = cmd.as_str().expect("improper TOML format");
+    let cmd_info = cmd.as_array().expect("improper TOML format");
 
-    println!("{}", open_file(&(String::from("commands/") + file)))
+    let method = (*cmd_info).get(0).unwrap().as_str().unwrap();
+    let file = (*cmd_info).get(1).unwrap().as_str().unwrap();
+
+    run_command(method, vec![String::from("commands\\") + file]).unwrap();
 }
