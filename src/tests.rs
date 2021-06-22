@@ -1,57 +1,73 @@
 use std::io;
 use std::io::Write;
 
-use crossterm::{
-    ExecutableCommand, QueueableCommand,
-    terminal, cursor, event::{self, Event}, style::{self, Color}, Result
-};
+use crossterm::QueueableCommand;
+use crossterm::Result;
+
+use crossterm::{execute, queue};
+use crossterm::{terminal, cursor};
+use crossterm::event::{self, Event};
+use crossterm::style::{self, Color};
 
 pub fn test() -> Result<()> {
-    let mut stdout = io::stdout();
-    stdout.execute(cursor::Hide)?;
+    let mut renderer = Renderer::new();
+    renderer.test()?;
 
-    let mut col = 1;
-    draw(&mut stdout)?;
-
-    loop {
-        match event::read()? {
-            Event::Key(event) => {
-                match event.code {
-                    event::KeyCode::Char(c) => {
-                        stdout
-                            .execute(cursor::MoveTo(col, 1))?
-                            .execute(style::SetBackgroundColor(Color::Reset))?
-                            .execute(style::Print(c))?;
-                        col += 1;
-                    },
-                    _ => ()
-                }
-            },
-            _ => ()
-        }
-    }
+    Ok(())
 }
 
-fn draw(stdout: &mut io::Stdout) -> Result<()> {
-    let (cols, rows) = terminal::size()?;
+pub struct Renderer {
 
-    for y in 0..rows {
-        for x in 0..cols {
-            stdout.queue(cursor::MoveTo(x, y))?;
+    stdout: io::Stdout
 
-            let color;
-            if (y == 0 || y == rows - 1) || (x == 0 || x == cols - 1) {
-                color = Color::Rgb { r: 255, g: 0, b: 0 };
-            } else {
-                color = Color::Reset;
-            }
+}
 
-            stdout
-                .queue(style::SetBackgroundColor(color))?
-                .queue(style::Print(" "))?;
-        }
+impl Renderer {
+
+    pub fn new() -> Renderer {
+        let stdout = io::stdout();
+        Renderer { stdout }
     }
 
-    stdout.flush()?;
-    Ok(())
+
+    pub fn test(&mut self) -> Result<()> {
+        terminal::enable_raw_mode()?;
+        execute!(&self.stdout,
+            terminal::EnterAlternateScreen,
+            terminal::SetTitle("Intershell"),
+            cursor::Hide
+        )?;
+    
+        let mut col = 0;
+        loop {
+            match event::read()? {
+                Event::Key(event) => {
+                    match event.code {
+                        event::KeyCode::Char(c) => {
+                            execute!(&self.stdout, cursor::MoveTo(col, 0), style::Print(c))?;
+                            col += 1;
+                        },
+                        _ => ()
+                    }
+                },
+                Event::Resize(width, height) => self.draw(width, height)?,
+                _ => ()
+            }
+        }
+    }
+    
+    fn draw(&mut self, width: u16, height: u16) -> Result<()> {
+        for x in 0..=width {
+            queue!(&self.stdout,
+                cursor::MoveTo(x, height),
+                style::SetBackgroundColor(Color::Blue),
+                style::Print(" ")
+            )?;
+        }
+        self.stdout.queue(style::ResetColor)?;
+
+        self.stdout.flush()?;
+        Ok(())
+    }
+
 }
