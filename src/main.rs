@@ -1,3 +1,7 @@
+mod parser;
+
+use parser::{input, parse};
+
 fn main() {
-    println!("Hello, world!");
+    println!("{}", parse(input(&String::from("enter some code... "))).print());
 }
