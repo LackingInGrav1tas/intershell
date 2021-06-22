@@ -1,5 +1,9 @@
 use std::io;
 use std::io::Write;
+use std::fs::File;
+use std::io::prelude::*;
+
+use toml::Value;
 
 pub struct Command {
     cmd: String,
@@ -40,4 +44,16 @@ pub fn parse(string: String) -> Command {
             arg_vec
         }
     }
+}
+
+pub fn open_file(fname: &str) -> String {
+    let mut file = File::open(fname).expect("Unable to open the file");
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("Unable to read the file");
+    contents
+}
+
+pub fn get_commands() -> Value {
+    let contents = open_file("commands/commands.toml");
+    contents.parse::<Value>().expect("couldn't parse TOML file")
 }
