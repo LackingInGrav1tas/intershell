@@ -11,12 +11,59 @@ pub struct Command {
 }
 
 impl Command {
+    pub fn command(&self) -> String {
+        self.cmd.clone()
+    }
+
+    pub fn arguements(&self) -> Vec<String> {
+        self.args.clone()
+    } 
+
     pub fn print(&mut self) -> String {
         let mut s = self.cmd.clone();
         for arg in &self.args {
             s += &(String::from(" ") + arg)
         }
         s
+    }
+}
+
+pub struct TOMLCommand {
+    method: String,
+    file: String,
+    args: Vec<String>
+}
+
+impl TOMLCommand {
+    pub fn from(cmd: Command) -> Self {
+        let arr = get_toml_arr(cmd.command());
+        let file = String::from((*arr).get(1).expect("get(1)").as_str().expect("get(1) as_str"));
+        Self {
+            method: String::from((*arr).get(0).expect("get(0)").as_str().expect("get(0) as_str")),
+            file: file.clone(),
+            args: {
+                let mut args: Vec<String> = vec![];
+                let mut i = 1;
+                loop {
+                    i += 1;
+                    if i == arr.len() {
+                        break;
+                    }
+                    args.push(String::from(arr.get(i).unwrap().as_str().expect("additional arg should be a string")));
+                }
+                args.push(String::from("commands\\") + &file);
+                args.append(& mut cmd.arguements());
+                args
+            }
+        }
+    }
+
+    pub fn method(&self) -> String {
+        self.method.clone()
+    }
+
+    pub fn args(&self) -> Vec<String> {
+        self.args.clone()
     }
 }
 
@@ -60,4 +107,25 @@ pub fn open_file(fname: &str) -> String {
 pub fn get_commands() -> Value {
     let contents = open_file("commands/commands.toml");
     contents.parse::<Value>().expect("couldn't parse TOML file")
+}
+
+pub fn get_toml_arr(name: String) -> Vec<toml::Value> {
+    let cmd = get_commands().get(name.clone()).expect(&format!("could not find [{}] in toml", name)).clone();
+    cmd.as_array().expect("improper TOML format").clone()
+}
+
+pub enum CommandType {
+    CustomCommand(String),
+    BuiltInCommand(String),
+}
+
+impl CommandType {
+    pub fn from(src: String) -> Self {
+        let cmd = src.split(" ").collect::<Vec<&str>>();
+        if vec![].contains(cmd.get(0).unwrap()) {
+            CommandType::BuiltInCommand(src)
+        } else {
+            CommandType::CustomCommand(src)
+        }
+    }
 }

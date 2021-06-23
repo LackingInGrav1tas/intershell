@@ -1,2 +1,15 @@
+[[std]]
+all = true
+cd = true
+dir = true
+mkdir = true
+echo = true
+set = true
+rename = true
+move = true
+# etc
+
+[[user]]
 pytest = ["python", "file.py"]
 exetest = ["cmd", "file.exe", "/c"]
+argtest = ["cmd", "argfile.exe", "/c"]

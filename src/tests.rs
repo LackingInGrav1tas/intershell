@@ -41,7 +41,7 @@ impl Renderer {
 
     pub fn test(&mut self) -> Result<()> {
         terminal::enable_raw_mode()?;
-        execute!(&self.stdout,
+        execute!(&mut self.stdout,
             terminal::EnterAlternateScreen,
             terminal::SetTitle("Intershell")
         )?;
@@ -105,7 +105,7 @@ impl Renderer {
     fn render_content(&self) -> Result<()> {
         let col = self.path.len() + 3;
 
-        execute!(&self.stdout,
+        execute!(io::stdout(),
             cursor::MoveToColumn(0),
             terminal::Clear(terminal::ClearType::CurrentLine),
             style::Print(format!("{}> {}", self.path, self.content)),
@@ -120,7 +120,7 @@ impl Renderer {
             footer.push(' ');
         }
 
-        execute!(&self.stdout,
+        execute!(io::stdout(),
             cursor::MoveTo(0, height),
             style::SetBackgroundColor(Color::Blue),
             style::SetForegroundColor(Color::White),
