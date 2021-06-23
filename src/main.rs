@@ -1,12 +1,14 @@
 mod parser;
 mod cmd;
+mod tests;
 
 use std::env;
 
 use parser::{input, parse, get_commands};
 use cmd::run_command;
 
-fn main() {
+fn main() -> crossterm::Result<()> {
+    // tests::test()?;
 
     let dir = env::current_dir().expect("").into_os_string().into_string().expect("");
 
@@ -21,4 +23,5 @@ fn main() {
     let file = (*cmd_info).get(1).unwrap().as_str().unwrap();
 
     run_command(method, vec![String::from("commands\\") + file]).unwrap();
+    Ok(())
 }

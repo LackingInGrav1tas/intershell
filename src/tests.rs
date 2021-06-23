@@ -38,14 +38,16 @@ impl Renderer {
             cursor::Hide
         )?;
     
-        let mut col = 0;
+        let mut text = String::from("> ");
+        execute!(&self.stdout, style::Print(&text))?;
+
         loop {
             match event::read()? {
                 Event::Key(event) => {
                     match event.code {
                         event::KeyCode::Char(c) => {
-                            execute!(&self.stdout, cursor::MoveTo(col, 0), style::Print(c))?;
-                            col += 1;
+                            text.push(c);
+                            execute!(&self.stdout, cursor::MoveTo(0, 0), style::Print(&text))?;
                         },
                         _ => ()
                     }
