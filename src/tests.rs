@@ -2,6 +2,7 @@ use std::env;
 use std::io;
 
 use crossterm::Result;
+use crossterm::ExecutableCommand;
 
 use crossterm::execute;
 use crossterm::{terminal, cursor};
@@ -18,6 +19,10 @@ pub fn test() -> Result<()> {
 pub struct Renderer {
 
     stdout: io::Stdout,
+
+    cursor: usize,
+
+    path: String,
     content: String
 
 }
@@ -26,14 +31,11 @@ impl Renderer {
 
     pub fn new() -> Renderer {
         let stdout = io::stdout();
-        let content = Renderer::path();
 
-        Renderer { stdout, content }
-    }
-
-    fn path() -> String {
         let dir = env::current_dir().expect("");
-        String::from(format!("{}> ", dir.display()))
+        let path = dir.display().to_string();
+
+        Renderer { stdout, cursor: 0, path, content: String::from("") }
     }
 
 
@@ -49,7 +51,9 @@ impl Renderer {
                 Event::Key(event) => self.handle_key(event)?,
                 Event::Resize(width, height) => {
                     self.draw(width, height)?;
-                    execute!(&self.stdout, cursor::MoveTo(0, 0), style::Print(&self.content))?;
+
+                    self.stdout.execute(cursor::MoveToRow(0))?;
+                    self.render_content()?;
                 },
                 _ => ()
             }
@@ -59,28 +63,68 @@ impl Renderer {
     fn handle_key(&mut self, event: event::KeyEvent) -> Result<()> {
         match event.code {
             event::KeyCode::Char(c) => {
-                self.content.push(c);
-                execute!(&self.stdout, cursor::MoveTo(0, 0), style::Print(&self.content))?;
+                self.content.insert(self.cursor, c);
+                self.cursor += 1;
+                
+                self.render_content()?;
+            },
+            event::KeyCode::Left => {
+                if self.cursor > 0 {
+                    self.stdout.execute(cursor::MoveLeft(1))?;
+                    self.cursor -= 1;
+                }
+            },
+            event::KeyCode::Right => {
+                if self.cursor < self.content.len() {
+                    self.stdout.execute(cursor::MoveRight(1))?;
+                    self.cursor += 1;
+                }
+            },
+            event::KeyCode::Backspace => {
+                if self.cursor > 0 {
+                    self.cursor -= 1;
+                    self.content.remove(self.cursor);
+                    
+                    self.render_content()?;
+                }
             },
             event::KeyCode::Enter => {
-                self.content = Renderer::path();
-                
-                execute!(&self.stdout,
-                    terminal::Clear(terminal::ClearType::CurrentLine),
-                    cursor::MoveTo(0, 0),
-                    style::Print(&self.content)
-                )?;
+                print!("\n{}", self.content);
+
+                self.cursor = 0;
+                self.content.clear();
+
+                self.stdout.execute(cursor::MoveDown(1))?;
+                self.render_content()?;
             },
             _ => ()
         }
         Ok(())
     }
-    
+
+    fn render_content(&self) -> Result<()> {
+        let col = self.path.len() + 3;
+
+        execute!(&self.stdout,
+            cursor::MoveToColumn(0),
+            terminal::Clear(terminal::ClearType::CurrentLine),
+            style::Print(format!("{}> {}", self.path, self.content)),
+            cursor::MoveToColumn((col + self.cursor) as u16)
+        )?;
+        Ok(())
+    }
+
     fn draw(&mut self, width: u16, height: u16) -> Result<()> {
+        let mut footer = String::from("[intershell]");
+        for _ in footer.len() as u16..=width {
+            footer.push(' ');
+        }
+
         execute!(&self.stdout,
             cursor::MoveTo(0, height),
             style::SetBackgroundColor(Color::Blue),
-            style::Print((0..=width).map(|_| " ").collect::<String>()),
+            style::SetForegroundColor(Color::White),
+            style::Print(footer),
             style::ResetColor
         )?;
         Ok(())
