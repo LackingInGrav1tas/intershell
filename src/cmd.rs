@@ -6,5 +6,6 @@ pub fn run_command(base_command: &str, args: Vec<String>) -> io::Result<std::pro
     for a in args {
         cmd.arg(a);
     }
+    println!("running {:?}", cmd);
     cmd.status()
 }

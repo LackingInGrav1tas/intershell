@@ -1,1 +1,2 @@
 m = ["python", "file.py"]
+n = ["cmd", "file.exe", "/c"]

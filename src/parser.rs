@@ -25,6 +25,10 @@ pub fn input(message: &String) -> String {
     io::stdout().flush().unwrap();
     let mut line = String::new();
     io::stdin().read_line(&mut line).expect("Could not read input.");
+    line.pop();
+    if line.chars().last().unwrap() == '\r' {
+        line.pop();
+    }
     line
 }
 
