@@ -8,7 +8,7 @@ use parser::{input, parse, get_commands};
 use cmd::run_command;
 
 fn main() -> crossterm::Result<()> {
-    // tests::test()?;
+    // tests::test()?; // This enables the fancy rendering
 
     let dir = env::current_dir().expect("").into_os_string().into_string().expect("");
 
