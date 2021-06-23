@@ -1,2 +1,2 @@
-m = ["python", "file.py"]
-n = ["cmd", "file.exe", "/c"]
+pytest = ["python", "file.py"]
+exetest = ["cmd", "file.exe", "/c"]

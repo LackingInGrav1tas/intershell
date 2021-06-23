@@ -11,7 +11,7 @@ fn main() -> crossterm::Result<()> {
     // tests::test()?; // This enables the fancy rendering
 
     let dir = env::current_dir().expect("").into_os_string().into_string().expect("");
-    let inp = input( &(dir + ">") );
+    let inp = input( &(dir + "::>") );
 
     let cmd = get_commands().get(inp.clone()).expect(&format!("could not find [{}] in toml", inp)).clone();
     let cmd_info = cmd.as_array().expect("improper TOML format");
@@ -29,7 +29,7 @@ fn main() -> crossterm::Result<()> {
         args.push(String::from(cmd_info.get(i).unwrap().as_str().expect("additional arg should be a string")));
     }
     args.push(String::from("commands\\") + file);
-    
+
     run_command(method, args).unwrap();
     Ok(())
 }
