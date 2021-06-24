@@ -1,4 +1,4 @@
-[[std]]
+# BUILT IN
 all = true
 cd = true
 dir = true
@@ -9,7 +9,8 @@ rename = true
 move = true
 # etc
 
-[[user]]
+
+# CUSTOM
 pytest = ["python", "file.py"]
 exetest = ["cmd", "file.exe", "/c"]
 argtest = ["cmd", "argfile.exe", "/c"]
