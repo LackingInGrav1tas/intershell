@@ -17,8 +17,8 @@ impl Shell {
         }
     }
 
-    pub fn handle_command(&mut self) {
-        match CommandType::from(input(&(self.cwd.clone() + ">"))) {
+    pub fn handle_command(&mut self, command: String) {
+        match CommandType::from(command) {
             CommandType::CustomCommand(s) => {
                 self.run_custom_command(
                     TOMLCommand::from(

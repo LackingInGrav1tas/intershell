@@ -1,16 +1,12 @@
 mod parser;
 mod cmd;
-mod tests;
+mod renderer;
 
-use cmd::{Shell};
+use renderer::Renderer;
 
 fn main() -> crossterm::Result<()> {
-    // tests::test()?; // This enables the fancy rendering
+    let mut renderer = Renderer::new();
+    renderer.start()?;
 
-    let mut shell = Shell::new();
-    loop {
-        shell.handle_command()
-    }
-    
     Ok(())
 }
