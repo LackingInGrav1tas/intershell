@@ -91,7 +91,6 @@ impl Renderer {
                 self.cursor = 0;
                 self.content.clear();
 
-                self.stdout.execute(cursor::MoveDown(1))?;
                 self.render_content()?;
             },
             _ => ()
