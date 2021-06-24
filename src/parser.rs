@@ -35,10 +35,13 @@ pub struct TOMLCommand {
 }
 
 impl TOMLCommand {
-    pub fn from(cmd: Command) -> Self {
-        let arr = get_toml_arr(cmd.command());
+    pub fn from(cmd: Command) -> Result<Self, ()> {
+        let arr = match get_toml_arr(cmd.command()) {
+            Ok(a) => a,
+            Err(()) => return Err(())
+        };
         let file = String::from((*arr).get(1).expect("get(1)").as_str().expect("get(1) as_str"));
-        Self {
+        Ok(Self {
             method: String::from((*arr).get(0).expect("get(0)").as_str().expect("get(0) as_str")),
             file: file.clone(),
             args: {
@@ -55,7 +58,7 @@ impl TOMLCommand {
                 args.append(& mut cmd.arguements());
                 args
             }
-        }
+        })
     }
 
     pub fn method(&self) -> String {
@@ -108,9 +111,12 @@ pub fn get_commands() -> Value {
     contents.parse::<Value>().expect("couldn't parse TOML file")
 }
 
-pub fn get_toml_arr(name: String) -> Vec<toml::Value> {
-    let cmd = get_commands().get(name.clone()).expect(&format!("could not find [{}] in toml", name)).clone();
-    cmd.as_array().expect("improper TOML format").clone()
+pub fn get_toml_arr(name: String) -> Result<Vec<toml::Value>, ()> {
+    let cmd = match get_commands().get(name.clone()) {
+        Some(v) => v,
+        None => return Err(())
+    }.clone();
+    Ok(cmd.as_array().expect("improper TOML format").clone())
 }
 
 pub enum CommandType {

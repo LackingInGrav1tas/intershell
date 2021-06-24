@@ -21,11 +21,14 @@ impl Shell {
         match CommandType::from(command) {
             CommandType::CustomCommand(s) => {
                 self.run_custom_command(
-                    TOMLCommand::from(
+                    match TOMLCommand::from(
                         parse(
                             s
                         )
-                    )
+                    ) {
+                        Ok(c) => c,
+                        Err(()) => return
+                    }
                 ).unwrap();
             }
             CommandType::BuiltInCommand(s) => {
@@ -41,7 +44,7 @@ impl Shell {
             cmd.arg(a);
         }
         println!("running {:?}", cmd);
-        cmd.status()    
+        cmd.status()
     }
 
     fn run_builtin_command(& mut self, command: String) {
