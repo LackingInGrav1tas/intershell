@@ -18,7 +18,6 @@ pub struct Renderer {
 
     cursor: usize,
 
-    path: String,
     content: String
 
 }
@@ -29,10 +28,7 @@ impl Renderer {
         let shell = Shell::new();
         let stdout = io::stdout();
 
-        let dir = env::current_dir().expect("");
-        let path = dir.display().to_string();
-
-        Renderer { shell, stdout, cursor: 0, path, content: String::from("") }
+        Renderer { shell, stdout, cursor: 0, content: String::from("") }
     }
 
 
@@ -99,12 +95,12 @@ impl Renderer {
     }
 
     fn render_content(&self) -> Result<()> {
-        let col = self.path.len() + 3;
+        let col = self.shell.get_cwd().len() + 3;
 
         execute!(io::stdout(),
             cursor::MoveToColumn(0),
             terminal::Clear(terminal::ClearType::CurrentLine),
-            style::Print(format!("{}> {}", self.path, self.content)),
+            style::Print(format!("{}> {}", self.shell.get_cwd(), self.content)),
             cursor::MoveToColumn((col + self.cursor) as u16)
         )?;
         Ok(())

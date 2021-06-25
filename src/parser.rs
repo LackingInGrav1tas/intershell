@@ -30,12 +30,12 @@ impl Command {
 
 pub struct TOMLCommand {
     method: String,
-    file: String,
     args: Vec<String>
 }
 
 impl TOMLCommand {
     pub fn from(cmd: Command) -> Result<Self, ()> {
+        // parses a command into a TOML command
         let arr = match get_toml_arr(cmd.command()) {
             Ok(a) => a,
             Err(()) => return Err(())
@@ -43,7 +43,6 @@ impl TOMLCommand {
         let file = String::from((*arr).get(1).expect("get(1)").as_str().expect("get(1) as_str"));
         Ok(Self {
             method: String::from((*arr).get(0).expect("get(0)").as_str().expect("get(0) as_str")),
-            file: file.clone(),
             args: {
                 let mut args: Vec<String> = vec![];
                 let mut i = 1;
@@ -70,6 +69,7 @@ impl TOMLCommand {
     }
 }
 
+/*
 pub fn input(message: &String) -> String {
     print!("{}", message);
     io::stdout().flush().unwrap();
@@ -80,8 +80,10 @@ pub fn input(message: &String) -> String {
     }
     line
 }
+*/
 
 pub fn parse(string: String) -> Command {
+    // formats a string into a Command object, essentially seperating it into args and the base command
     let mut parts = string.split(" ").collect::<Vec<&str>>();
     Command {
         cmd: {
@@ -100,6 +102,7 @@ pub fn parse(string: String) -> Command {
 }
 
 pub fn open_file(fname: &str) -> String {
+    // gets file contents as a String
     let mut file = File::open(fname).expect("Unable to open the file");
     let mut contents = String::new();
     file.read_to_string(&mut contents).expect("Unable to read the file");
@@ -107,11 +110,13 @@ pub fn open_file(fname: &str) -> String {
 }
 
 pub fn get_commands() -> Value {
+    // returns the TOML table
     let contents = open_file("commands/commands.toml");
     contents.parse::<Value>().expect("couldn't parse TOML file")
 }
 
 pub fn get_toml_arr(name: String) -> Result<Vec<toml::Value>, ()> {
+    // finds command array from toml file
     let cmd = match get_commands().get(name.clone()) {
         Some(v) => v,
         None => return Err(())
@@ -127,6 +132,7 @@ pub enum CommandType {
 
 impl CommandType {
     pub fn from(src: String) -> Self {
+        // parses string into a command type enum
         let cmd = src.split(" ").collect::<Vec<&str>>();
         if cmd.get(0).unwrap() == &"$" {
             CommandType::CMDCall(src)
