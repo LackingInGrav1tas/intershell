@@ -14,3 +14,5 @@ move = true
 pytest = ["python", "file.py"]
 exetest = ["cmd", "file.exe", "/c"]
 argtest = ["cmd", "argfile.exe", "/c"]
+rplc = ["cmd", "rpcl.exe", "/c"]
+ports = ["cmd", "ports.exe", "/c"]

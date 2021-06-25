@@ -21,11 +21,7 @@ impl Shell {
         match CommandType::from(command) {
             CommandType::CustomCommand(s) => {
                 self.run_custom_command(
-                    match TOMLCommand::from(
-                        parse(
-                            s
-                        )
-                    ) {
+                    match TOMLCommand::from( parse(s) ) {
                         Ok(c) => c,
                         Err(()) => return
                     }
@@ -33,6 +29,9 @@ impl Shell {
             }
             CommandType::BuiltInCommand(s) => {
                 self.run_builtin_command(s)
+            }
+            CommandType::CMDCall(s) => {
+                // override everything and send straight to normal cmd
             }
         }
     }
@@ -44,10 +43,61 @@ impl Shell {
             cmd.arg(a);
         }
         println!("running {:?}", cmd);
+        cmd.current_dir(&self.cwd);
         cmd.status()
     }
 
     fn run_builtin_command(& mut self, command: String) {
+        match command.as_str() {
+            "cd" => {
 
+            }
+            "dir" => {
+
+            }
+            "md" | "mkdir" => {
+
+            }
+            "del" | "delete" | "erase" => {
+
+            }
+            "attrib" | "attributes" => {
+
+            }
+            "cls" | "clear" => {
+
+            }
+            "exit" | "quit" => {
+                std::process::exit(0)
+            }
+            "color" => {
+
+            }
+            "comp" | "compare" => {
+
+            }
+            "copy" => {
+
+            }
+            "echo" => {
+
+            }
+            "find" => {
+
+            }
+            "print" => {
+
+            }
+            "rename" => {
+
+            }
+            "rmdir" => {
+
+            }
+            "ip" | "ipconfig" => {
+                
+            }
+            _ => unreachable!()
+        }
     }
 }

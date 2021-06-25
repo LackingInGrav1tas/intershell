@@ -122,12 +122,19 @@ pub fn get_toml_arr(name: String) -> Result<Vec<toml::Value>, ()> {
 pub enum CommandType {
     CustomCommand(String),
     BuiltInCommand(String),
+    CMDCall(String),
 }
 
 impl CommandType {
     pub fn from(src: String) -> Self {
         let cmd = src.split(" ").collect::<Vec<&str>>();
-        if vec![].contains(cmd.get(0).unwrap()) {
+        if cmd.get(0).unwrap() == &"$" {
+            CommandType::CMDCall(src)
+        } else if vec![
+            "cd", "dir", "mkdir", "md", "help", "exit", "quit", "attrib", "attribute",
+            "cls", "clear", "del", "delete", "color", "comp", "compare", "copy",
+            "echo", "erase", "find", "print", "rename", "rmdir", "ip", "ipconfig"
+            ].contains(cmd.get(0).unwrap()) {
             CommandType::BuiltInCommand(src)
         } else {
             CommandType::CustomCommand(src)
