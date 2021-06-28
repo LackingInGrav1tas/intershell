@@ -93,8 +93,8 @@ impl Shell {
                 let newdir: String;
                 self.cwd = String::from(
                     str::replace(
-                        if Path::new(&(self.cwd.clone() + args.get(1).expect("expected more args for CD command"))).exists() {
-                            newdir = self.cwd.clone() + args[1];
+                        if Path::new(&(self.cwd.clone() + "\\" + args.get(1).expect("expected more args for CD command"))).exists() {
+                            newdir = self.cwd.clone() + "\\" + args[1];
                             &newdir
                         } else if Path::new(args.get(1).expect("expected more args for CD command")).exists() {
                             args[1]
