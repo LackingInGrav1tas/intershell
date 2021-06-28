@@ -8,7 +8,7 @@ use std::io::Write;
 
 use serde::{Serialize, Deserialize};
 
-use crate::parser::{parse, TOMLCommand, CommandType, open_file};
+use crate::parser::{TOMLCommand, CommandType, open_file, parse};
 
 macro_rules! needs_rendering {
     () => {
@@ -44,7 +44,7 @@ impl Shell {
         match CommandType::from(command) {
             CommandType::CustomCommand(s) => {
                 self.run_custom_command(
-                    match TOMLCommand::from( parse(s) ) {
+                    match TOMLCommand::from( crate::parser::Command::from(s) ) {
                         Ok(c) => c,
                         Err(()) => return
                     }
@@ -54,9 +54,9 @@ impl Shell {
                 self.run_builtin_command(s)
             }
             CommandType::CMDCall(s) => {
-                let mut c = s.chars();
-                c.next();
-                self.run_vanilla_command(& mut String::from(c.as_str()).split(" ").collect::<Vec<&str>>())
+                let mut c = parse(&s);
+                c.remove(0);
+                self.run_vanilla_command(& mut c)
             }
         }
     }
@@ -72,13 +72,12 @@ impl Shell {
         cmd.status()
     }
 
-    fn run_vanilla_command(&mut self, args: &mut Vec<&str>) {
+    fn run_vanilla_command(&mut self, args: &mut Vec<String>) {
         // runs a cmd command
         let mut cmd = Command::new("cmd");
         self.history.push(format!("{:?}", cmd));
-        let mut cmd_args = vec!["/c"];
-        cmd_args.append(args);
-        cmd.args(&cmd_args);
+        cmd.arg("/c");
+        cmd.args(args);
         cmd.current_dir(&self.get_cwd());
         // println!("running {:?}", cmd);
         cmd.status().unwrap();
@@ -86,9 +85,9 @@ impl Shell {
 
     fn run_builtin_command(& mut self, command: String) {
         // runs a built in command
-        let mut args = command.split(" ").collect::<Vec<&str>>();
+        let mut args = parse(&command);
         // args.remove(0);
-        match args.get(0).expect("no command given.").clone() {
+        match args.get(0).expect("no command given.").as_str() {
             "cd" => {
                 let mut temp;
                 let mut nwd: &str = args.get(1).expect("expected more args for CD command");
@@ -152,7 +151,7 @@ impl Shell {
 
             }
             "comp" | "compare" => {
-                args[0] = "comp";
+                args[0] = String::from("comp");
                 self.run_vanilla_command(& mut args)
             }
             "copy" => {
@@ -179,7 +178,7 @@ impl Shell {
                 self.run_vanilla_command(& mut args)
             }
             "ip" | "ipconfig" => {
-                args[0] = "ipconfig";
+                args[0] = String::from("ipconfig");
                 self.run_vanilla_command(& mut args)
             }
             "save" | "saveenv" | "savestate" => {

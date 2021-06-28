@@ -10,6 +10,14 @@ pub struct Command {
 
 #[allow(dead_code)]
 impl Command {
+    pub fn from(string: String) -> Self {
+        // formats a string into a Command object, essentially seperating it into args and the base command
+        let mut parts = parse(&string);
+        Self {
+            cmd: parts.remove(0),
+            args: parts
+        }
+    }
     pub fn command(&self) -> String {
         self.cmd.clone()
     }
@@ -68,37 +76,67 @@ impl TOMLCommand {
     }
 }
 
-/*
-pub fn input(message: &String) -> String {
-    print!("{}", message);
-    io::stdout().flush().unwrap();
-    let mut line = String::new();
-    io::stdin().read_line(&mut line).expect("Could not read input.");
-    while vec!['\n', '\r'].contains(&line.chars().last().unwrap()) {
-        line.pop();
-    }
-    line
+pub enum CommandType {
+    CustomCommand(String),
+    BuiltInCommand(String),
+    CMDCall(String),
 }
-*/
 
-pub fn parse(string: String) -> Command {
-    // formats a string into a Command object, essentially seperating it into args and the base command
-    let mut parts = string.split(" ").collect::<Vec<&str>>();
-    Command {
-        cmd: {
-            let c = *parts.get_mut(0).expect("expected a command");
-            parts.remove(0);
-            String::from(c)
-        },
-        args: {
-            let mut arg_vec = vec![];
-            for item in parts {
-                arg_vec.push(String::from(item))
-            }
-            arg_vec
+impl CommandType {
+    pub fn from(src: String) -> Self {
+        // parses string into a command type enum
+        let cmd = parse(&src);
+        if cmd.get(0).unwrap() == &"$" {
+            CommandType::CMDCall(src)
+        } else if vec![
+            "cd", "dir", "mkdir", "md", "help", "exit", "quit", "attrib", "attribute",
+            "cls", "clear", "del", "delete", "color", "comp", "compare", "copy",
+            "echo", "erase", "find", "print", "rename", "rmdir", "ip", "ipconfig",
+            "save", "saveenv", "savestate", "load", "loadenv", "loadstate", "history"
+            ].contains(&cmd.get(0).unwrap().as_str()) {
+            CommandType::BuiltInCommand(src)
+        } else {
+            CommandType::CustomCommand(src)
         }
     }
 }
+
+pub fn parse(command: &String) -> Vec<String> {
+    let mut args = vec![];
+    let mut current = String::new();
+    let mut nested = false;
+    for c in command.chars() {
+        if vec!['$'].contains(&c) {
+            // symbols
+            if current.len() > 0 && !nested {
+                args.push(current);
+                current = String::new();
+            }
+            args.push(c.to_string());
+        } else if c == '"' {
+            nested = !nested;
+            if !nested {
+                // end quote
+                args.push(current);
+                current = String::new();
+            }
+        } else if c == ' ' {
+            if nested {
+                current.push(' ');
+            } else if current.len() > 0 {
+                args.push(current);
+                current = String::new();
+            }
+        } else {
+            current.push(c)
+        }
+    }
+    if current.len() > 0 {
+        args.push(current);
+    }
+    args
+}
+
 
 pub fn open_file(fname: &str) -> String {
     // gets file contents as a String
@@ -121,29 +159,4 @@ pub fn get_toml_arr(name: String) -> Result<Vec<toml::Value>, ()> {
         None => return Err(())
     }.clone();
     Ok(cmd.as_array().expect("improper TOML format").clone())
-}
-
-pub enum CommandType {
-    CustomCommand(String),
-    BuiltInCommand(String),
-    CMDCall(String),
-}
-
-impl CommandType {
-    pub fn from(src: String) -> Self {
-        // parses string into a command type enum
-        let cmd = src.split(" ").collect::<Vec<&str>>();
-        if cmd.get(0).unwrap() == &"$" {
-            CommandType::CMDCall(src)
-        } else if vec![
-            "cd", "dir", "mkdir", "md", "help", "exit", "quit", "attrib", "attribute",
-            "cls", "clear", "del", "delete", "color", "comp", "compare", "copy",
-            "echo", "erase", "find", "print", "rename", "rmdir", "ip", "ipconfig",
-            "save", "saveenv", "savestate", "load", "loadenv", "loadstate", "history"
-            ].contains(cmd.get(0).unwrap()) {
-            CommandType::BuiltInCommand(src)
-        } else {
-            CommandType::CustomCommand(src)
-        }
-    }
 }
