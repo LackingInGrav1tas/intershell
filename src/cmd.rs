@@ -4,6 +4,11 @@ use std::env;
 use std::path::Path;
 use std::str;
 use std::fs;
+use std::io::Write;
+
+use serde::{Serialize, Deserialize};
+
+use crate::parser::{parse, TOMLCommand, CommandType};
 
 macro_rules! needs_rendering {
     () => {
@@ -11,8 +16,9 @@ macro_rules! needs_rendering {
     };
 }
 
-use crate::parser::{parse, TOMLCommand, CommandType};
 
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Shell {
     cwd: String,
     history: Vec<String>,
@@ -34,6 +40,7 @@ impl Shell {
 
     pub fn handle_command(&mut self, command: String) {
         // wrapper function which takes a command String as input and executes it
+        self.history.push(command.clone());
         match CommandType::from(command) {
             CommandType::CustomCommand(s) => {
                 self.run_custom_command(
@@ -57,7 +64,6 @@ impl Shell {
     fn run_custom_command(&mut self, command: TOMLCommand) -> io::Result<std::process::ExitStatus> {
         // runs a custom (toml -> file) command
         let mut cmd = Command::new(command.method());
-        self.history.push(format!("{:?}", cmd));
         for a in command.args() {
             cmd.arg(a);
         }
@@ -165,6 +171,24 @@ impl Shell {
             "ip" | "ipconfig" => {
                 args[0] = "ipconfig";
                 self.run_vanilla_command(& mut args)
+            }
+            "save" | "saveenv" | "savestate" => {
+                let file = args.get(1).unwrap();
+                let serialized = serde_json::to_string_pretty(self).unwrap();
+                let mut fstream = fs::File::create(format!("saves/{}.json", file)).unwrap();
+                println!("{}",
+                    match write!(fstream, "{}", serialized) {
+                        Ok(_) => {
+                            format!("successfully saved environment to saves/{}.json", args.get(1).unwrap())
+                        }
+                        Err(_) => {
+                            format!("was not able to save environment")
+                        }
+                    }
+                )
+            }
+            "load" | "loadenv" | "loadstate" => {
+
             }
             com => {
                 println!("should not be reachable, value {:?}", com);

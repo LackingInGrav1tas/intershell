@@ -1,5 +1,3 @@
-use std::io;
-use std::io::Write;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -10,6 +8,7 @@ pub struct Command {
     args: Vec<String>
 }
 
+#[allow(dead_code)]
 impl Command {
     pub fn command(&self) -> String {
         self.cmd.clone()
@@ -139,7 +138,8 @@ impl CommandType {
         } else if vec![
             "cd", "dir", "mkdir", "md", "help", "exit", "quit", "attrib", "attribute",
             "cls", "clear", "del", "delete", "color", "comp", "compare", "copy",
-            "echo", "erase", "find", "print", "rename", "rmdir", "ip", "ipconfig"
+            "echo", "erase", "find", "print", "rename", "rmdir", "ip", "ipconfig",
+            "save", "saveenv", "savestate"
             ].contains(cmd.get(0).unwrap()) {
             CommandType::BuiltInCommand(src)
         } else {
