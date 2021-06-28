@@ -56,7 +56,7 @@ impl Shell {
             CommandType::CMDCall(s) => {
                 let mut c = s.chars();
                 c.next();
-                self.run_builtin_command(String::from(c.as_str()))
+                self.run_vanilla_command(& mut String::from(c.as_str()).split(" ").collect::<Vec<&str>>())
             }
         }
     }
@@ -80,7 +80,7 @@ impl Shell {
         cmd_args.append(args);
         cmd.args(&cmd_args);
         cmd.current_dir(&self.get_cwd());
-        println!("running {:?}", cmd);
+        // println!("running {:?}", cmd);
         cmd.status().unwrap();
     }
 
