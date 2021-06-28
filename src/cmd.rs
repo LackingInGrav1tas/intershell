@@ -66,14 +66,13 @@ impl Shell {
         cmd.status()
     }
 
-    fn run_cmd_command(&mut self, args: &mut Vec<&str>) {
+    fn run_vanilla_command(&mut self, args: &mut Vec<&str>) {
         // runs a cmd command
-        let mut cmd = Command::new(args[0]);
-        args.remove(0);
+        let mut cmd = Command::new("cmd");
         self.history.push(format!("{:?}", cmd));
-        for a in args {
-            cmd.arg(a);
-        }
+        let mut cmd_args = vec!["/c"];
+        cmd_args.append(args);
+        cmd.args(&cmd_args);
         cmd.current_dir(&self.get_cwd());
         println!("running {:?}", cmd);
         cmd.status().unwrap();
@@ -138,10 +137,10 @@ impl Shell {
             }
             "comp" | "compare" => {
                 args[0] = "comp";
-                self.run_cmd_command(& mut args)
+                self.run_vanilla_command(& mut args)
             }
             "copy" => {
-                self.run_cmd_command(& mut args)
+                self.run_vanilla_command(& mut args)
             }
             "echo" => {
                 let mut c = std::process::Command::new("cmd");
@@ -152,20 +151,20 @@ impl Shell {
                 c.status().unwrap();
             }
             "find" => {
-                self.run_cmd_command(& mut args)
+                self.run_vanilla_command(& mut args)
             }
             "print" => {
-                self.run_cmd_command(& mut args)
+                self.run_vanilla_command(& mut args)
             }
             "rename" => {
-                self.run_cmd_command(& mut args)
+                self.run_vanilla_command(& mut args)
             }
             "rmdir" => {
-                self.run_cmd_command(& mut args)
+                self.run_vanilla_command(& mut args)
             }
             "ip" | "ipconfig" => {
                 args[0] = "ipconfig";
-                self.run_cmd_command(& mut args)
+                self.run_vanilla_command(& mut args)
             }
             com => {
                 println!("should not be reachable, value {:?}", com);
