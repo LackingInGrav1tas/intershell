@@ -90,16 +90,25 @@ impl Shell {
         // args.remove(0);
         match args.get(0).expect("no command given.").clone() {
             "cd" => {
+                let mut temp;
+                let mut nwd: &str = args.get(1).expect("expected more args for CD command");
+                nwd = if vec!['/', '\\'].contains(&nwd.chars().last().unwrap()) {
+                    temp = String::from(nwd);
+                    temp.pop().unwrap();
+                    &temp
+                } else {
+                    nwd
+                };
                 let newdir: String;
                 self.cwd = String::from(
                     str::replace(
-                        if Path::new(&(self.cwd.clone() + "\\" + args.get(1).expect("expected more args for CD command"))).exists() {
-                            newdir = self.cwd.clone() + "\\" + args[1];
+                        if Path::new(&(self.cwd.clone() + "\\" + nwd)).exists() {
+                            newdir = self.cwd.clone() + "\\" + nwd;
                             &newdir
-                        } else if Path::new(args.get(1).expect("expected more args for CD command")).exists() {
-                            args[1]
+                        } else if Path::new(nwd).exists() {
+                            nwd
                         } else {
-                            println!("directory {} does not exist.", args.get(1).expect("expected more args for CD command"));
+                            println!("directory {} does not exist.", nwd);
                             return
                         },
                         "/", "\\"
