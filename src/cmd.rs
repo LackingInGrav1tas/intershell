@@ -8,7 +8,7 @@ use std::io::Write;
 
 use serde::{Serialize, Deserialize};
 
-use crate::parser::{parse, TOMLCommand, CommandType};
+use crate::parser::{parse, TOMLCommand, CommandType, open_file};
 
 macro_rules! needs_rendering {
     () => {
@@ -99,6 +99,7 @@ impl Shell {
                 } else {
                     nwd
                 };
+                if nwd == "." { return }
                 let newdir: String;
                 self.cwd = String::from(
                     str::replace(
@@ -197,7 +198,18 @@ impl Shell {
                 )
             }
             "load" | "loadenv" | "loadstate" => {
-
+                *self = serde_json::from_str::<Shell>(
+                    &open_file(
+                        &format!("saves/{}.json", args.get(1).unwrap())
+                    )
+                ).unwrap();
+            }
+            "history" => {
+                println!("HISTORY");
+                for log in &self.history {
+                    println!("{}", log)
+                }
+                println!()
             }
             com => {
                 println!("should not be reachable, value {:?}", com);

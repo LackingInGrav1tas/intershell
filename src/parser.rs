@@ -139,7 +139,7 @@ impl CommandType {
             "cd", "dir", "mkdir", "md", "help", "exit", "quit", "attrib", "attribute",
             "cls", "clear", "del", "delete", "color", "comp", "compare", "copy",
             "echo", "erase", "find", "print", "rename", "rmdir", "ip", "ipconfig",
-            "save", "saveenv", "savestate"
+            "save", "saveenv", "savestate", "load", "loadenv", "loadstate", "history"
             ].contains(cmd.get(0).unwrap()) {
             CommandType::BuiltInCommand(src)
         } else {
