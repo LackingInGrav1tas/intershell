@@ -38,7 +38,7 @@ impl Shell {
         self.cwd.clone()
     }
 
-    pub fn handle_command(&mut self, command: String) {
+    pub fn handle_command(&mut self, command: String) -> bool {
         // wrapper function which takes a command String as input and executes it
         self.history.push(command.clone());
         match CommandType::from(command) {
@@ -46,9 +46,10 @@ impl Shell {
                 self.run_custom_command(
                     match TOMLCommand::from( crate::parser::Command::from(s) ) {
                         Ok(c) => c,
-                        Err(()) => return
+                        Err(()) => return true
                     }
                 ).unwrap();
+                true
             }
             CommandType::BuiltInCommand(s) => {
                 self.run_builtin_command(s)
@@ -56,7 +57,8 @@ impl Shell {
             CommandType::CMDCall(s) => {
                 let mut c = parse(&s);
                 c.remove(0);
-                self.run_vanilla_command(& mut c)
+                self.run_vanilla_command(& mut c);
+                true
             }
         }
     }
@@ -83,7 +85,7 @@ impl Shell {
         cmd.status().unwrap();
     }
 
-    fn run_builtin_command(& mut self, command: String) {
+    fn run_builtin_command(& mut self, command: String) -> bool {
         // runs a built in command
         let mut args = parse(&command);
         // args.remove(0);
@@ -91,14 +93,14 @@ impl Shell {
             "cd" => {
                 let mut temp;
                 let mut nwd: &str = args.get(1).expect("expected more args for CD command");
-                nwd = if vec!['/', '\\'].contains(&nwd.chars().last().unwrap()) {
+                nwd = if ['/', '\\'].contains(&nwd.chars().last().unwrap()) {
                     temp = String::from(nwd);
                     temp.pop().unwrap();
                     &temp
                 } else {
                     nwd
                 };
-                if nwd == "." { return }
+                if nwd == "." { return true }
                 let newdir: String;
                 self.cwd = String::from(
                     str::replace(
@@ -109,11 +111,11 @@ impl Shell {
                             nwd
                         } else {
                             println!("directory {} does not exist.", nwd);
-                            return
+                            return true
                         },
                         "/", "\\"
                     )
-                )
+                );
             }
             "dir" => {
                 println!("CONTENTS OF {}", self.get_cwd());
@@ -145,7 +147,8 @@ impl Shell {
                 needs_rendering!();
             }
             "exit" | "quit" => {
-                std::process::exit(0)
+                std::process::exit(0);
+                // until later: return false
             }
             "color" => {
 
@@ -215,5 +218,6 @@ impl Shell {
                 std::process::exit(0)
             }
         }
+        true
     }
 }

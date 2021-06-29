@@ -106,7 +106,7 @@ pub fn parse(command: &String) -> Vec<String> {
     let mut current = String::new();
     let mut nested = false;
     for c in command.chars() {
-        if vec!['$'].contains(&c) {
+        if ['$'].contains(&c) {
             // symbols
             if current.len() > 0 && !nested {
                 args.push(current);
