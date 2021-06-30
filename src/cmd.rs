@@ -1,5 +1,4 @@
 use std::process::Command;
-use std::io;
 use std::env;
 use std::path::Path;
 use std::str;
@@ -8,7 +7,7 @@ use std::io::Write;
 
 use serde::{Serialize, Deserialize};
 
-use crate::parser::{TOMLCommand, CommandType, open_file, parse};
+use crate::parser::{CommandType, open_file, parse};
 
 macro_rules! needs_rendering {
     () => {
@@ -43,13 +42,10 @@ impl Shell {
         self.history.push(command.clone());
         match CommandType::from(command) {
             CommandType::CustomCommand(s) => {
-                self.run_custom_command(
-                    match TOMLCommand::from( crate::parser::Command::from(s) ) {
-                        Ok(c) => c,
-                        Err(()) => return true
-                    }
-                ).unwrap();
-                true
+                match self.run_custom_command(s) {
+                    Ok(()) => true,
+                    Err(()) => false
+                }
             }
             CommandType::BuiltInCommand(s) => {
                 self.run_builtin_command(s)
@@ -63,15 +59,26 @@ impl Shell {
         }
     }
 
-    fn run_custom_command(&mut self, command: TOMLCommand) -> io::Result<std::process::ExitStatus> {
+    fn run_custom_command(&mut self, command: String) -> Result<(), ()> {
         // runs a custom (toml -> file) command
-        let mut cmd = Command::new(command.method());
-        for a in command.args() {
-            cmd.arg(a);
-        }
+        let mut args = parse(&command);
+
+        let arr = crate::parser::get_toml_arr(args.remove(0))?;
+
+        let file = String::from((*arr).get(1).expect("get(1)").as_str().expect("get(1) as_str"));
+
+        let method = String::from((*arr).get(0).expect("get(0)").as_str().expect("get(0) as_str"));
+
+        let mut cmd = Command::new(method);
+        args.insert(0, String::from("commands\\") + &file);
+        args.insert(0, String::from("/c"));
+        cmd.args(args);
         println!("running {:?}", cmd);
         cmd.current_dir(&self.get_cwd());
-        cmd.status()
+        match cmd.status() {
+            Ok(_) => Ok(()),
+            Err(_) => Err(())
+        }
     }
 
     fn run_vanilla_command(&mut self, args: &mut Vec<String>) {
