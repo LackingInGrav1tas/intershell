@@ -79,9 +79,7 @@ impl Shell {
                 }
             }
             Err(_) => {
-                let mut c = parse(&command);
-                c.remove(0);
-                self.run_vanilla_command(& mut c);
+                self.run_vanilla_command(& mut parse(&command));
                 Ok(())
             }
         }
