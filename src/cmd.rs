@@ -7,7 +7,7 @@ use std::io::Write;
 
 use serde::{Serialize, Deserialize};
 
-use crate::parser::{CommandType, open_file, parse};
+use crate::parser::{CommandType, open_file, parse, get_toml_arr};
 
 macro_rules! needs_rendering {
     () => {
@@ -63,21 +63,27 @@ impl Shell {
         // runs a custom (toml -> file) command
         let mut args = parse(&command);
 
-        let arr = crate::parser::get_toml_arr(args.remove(0))?;
-
-        let file = String::from((*arr).get(1).expect("get(1)").as_str().expect("get(1) as_str"));
-
-        let method = String::from((*arr).get(0).expect("get(0)").as_str().expect("get(0) as_str"));
-
-        let mut cmd = Command::new(method);
-        args.insert(0, String::from("commands\\") + &file);
-        args.insert(0, String::from("/c"));
-        cmd.args(args);
-        println!("running {:?}", cmd);
-        cmd.current_dir(&self.get_cwd());
-        match cmd.status() {
-            Ok(_) => Ok(()),
-            Err(_) => Err(())
+        match get_toml_arr(args.remove(0)) {
+            Ok(arr) => {
+                let file = String::from((*arr).get(1).expect("get(1)").as_str().expect("get(1) as_str"));
+                let method = String::from((*arr).get(0).expect("get(0)").as_str().expect("get(0) as_str"));
+                let mut cmd = Command::new(method);
+                args.insert(0, String::from("commands\\") + &file);
+                args.insert(0, String::from("/c"));
+                cmd.args(args);
+                println!("running {:?}", cmd);
+                cmd.current_dir(&self.get_cwd());
+                match cmd.status() {
+                    Ok(_) => Ok(()),
+                    Err(_) => Err(())
+                }
+            }
+            Err(_) => {
+                let mut c = parse(&command);
+                c.remove(0);
+                self.run_vanilla_command(& mut c);
+                Ok(())
+            }
         }
     }
 
